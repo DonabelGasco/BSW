@@ -13,6 +13,7 @@
     </header>
 
     <main>
+      <router-view />
       <section class="hero">
         <div class="container hero-grid">
           <div class="hero-copy">
