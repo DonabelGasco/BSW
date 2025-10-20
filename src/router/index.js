@@ -1,51 +1,63 @@
-import { createRouter, createWebHistory } from "vue-router"
-import { getAuth, onAuthStateChanged } from "firebase/auth"
+import { createRouter, createWebHistory } from "vue-router";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import LoginForm from '../components/Login.vue'
-import SignupForm from '../components/Signup.vue'
-import Home from '../components/Home.vue'
+// Import all your views
+import AdminDash from "../views/admin/admindash.vue";
+import Login from "../views/auth/Login.vue";
+import Signup from "../views/auth/Signup.vue";
+import UserHome from "../views/user/index.vue";
 
 const router = createRouter({
-    history: createWebHistory(),
-    routes: [
-        {
-            path: '/home',
-            name: 'Home',
-            component: Home,
-            meta: { requiresAuth: true } 
-        },
-        {
-            path: '/login',
-            name: 'Login',
-            component: LoginForm,
-            meta: { requiresGuest: true } 
-        },
-        {
-            path: '/signup',
-            name: 'Signup',
-            component: SignupForm,
-            meta: { requiresGuest: true } 
-        }
-    ],
+  history: createWebHistory(),
+  routes: [
+    // ✅ Admin Dashboard (protected)
+    {
+      path: "/admin",
+      name: "AdminDash",
+      component: AdminDash,
+      meta: { requiresAuth: true },
+    },
+
+    // ✅ User Dashboard (protected)
+    {
+      path: "/user",
+      name: "UserHome",
+      component: UserHome,
+      meta: { requiresAuth: true },
+    },
+
+    // ✅ Login & Signup (for guests only)
+    {
+      path: "/login",
+      name: "Login",
+      component: Login,
+      meta: { requiresGuest: true },
+    },
+    {
+      path: "/signup",
+      name: "Signup",
+      component: Signup,
+      meta: { requiresGuest: true },
+    },
+  ],
 });
 
-const auth = getAuth()
+// ✅ Firebase Auth Guard
+const auth = getAuth();
 
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+  const requiresGuest = to.matched.some((record) => record.meta.requiresGuest);
 
   onAuthStateChanged(auth, (user) => {
     if (requiresAuth && !user) {
-      // Not logged in → redirect to login
-      next('/login')
+      next("/signup"); // not logged in → login page
     } else if (requiresGuest && user) {
-      // Already logged in → redirect to home
-      next('/home')
+      next("/user"); // already logged in → user dashboard
     } else {
-      next()
+      next(); // continue as normal
     }
-  })
-})
+  });
+});
 
 export default router;
