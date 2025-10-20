@@ -3,7 +3,14 @@
     <!-- Header with playful design -->
     <header class="site-header">
       <div class="container header-inner">
-        <h1 class="logo">
+        <h1
+          class="logo"
+          role="button"
+          tabindex="0"
+          @click="goHome"
+          @keydown.enter="goHome"
+          aria-label="Go to home"
+        >
           <span class="logo-icon">🎓</span>
           OIKOS · BSW
         </h1>
@@ -11,6 +18,7 @@
           <a href="#features" class="nav-link">✨ Features</a>
           <a href="#how" class="nav-link">🔧 How it works</a>
           <a href="#contact" class="nav-link">📞 Contact</a>
+          <router-link to="/login" class="nav-link">🔐 Log in</router-link>
           <button class="btn btn-primary" @click="openSignup">
             🚀 Get Started
           </button>
@@ -181,6 +189,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import Signup from './views/auth/Signup.vue'
 
 const year = new Date().getFullYear()
@@ -193,6 +202,12 @@ function openSignup() {
 }
 function closeSignup() {
   signupOpen.value = false
+}
+
+// Router helper for logo click
+const router = useRouter()
+function goHome() {
+  router.push('/')
 }
 function signupSubmitData(payload) {
   // placeholder: integrate with your backend or auth provider
@@ -277,6 +292,15 @@ function clearContact() {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.logo[role="button"] {
+  cursor: pointer;
+}
+.logo:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .logo-icon {
@@ -731,12 +755,13 @@ function clearContact() {
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08); /* Lighter shadow */
 }
 
-.contact .container {
+ .contact .container, .container.contact {
   max-width: 700px; /* Reduced from 1200px */
   margin: 0 auto;
   padding: 0 1.5rem; /* Reduced padding */
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .contact-card {
