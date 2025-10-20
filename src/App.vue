@@ -165,29 +165,23 @@
     </footer>
 
     <!-- Signup Modal -->
-    <div v-if="signupOpen" class="modal" role="dialog" aria-modal="true" aria-label="Sign up">
-      <div class="modal-panel">
-        <button class="modal-close" @click="closeSignup" aria-label="Close">❌</button>
-        <div class="modal-header">
-          <div class="modal-icon">🎉</div>
-          <h4>Create a free account</h4>
-          <p class="modal-subtitle">Start a demo session in seconds! ⚡</p>
-        </div>
-        <form @submit.prevent="submitSignup" class="modal-form">
-          <input v-model="signup.email" type="email" placeholder="📧 Email" required class="form-input" />
-          <input v-model="signup.name" type="text" placeholder="👤 Name" class="form-input" />
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit">🚀 Create account</button>
-            <button class="btn btn-ghost" type="button" @click="closeSignup">❌ Cancel</button>
+    <transition name="modal-fade">
+      <div v-if="signupOpen" class="modal" role="dialog" aria-modal="true" aria-label="Sign up">
+        <div class="modal-panel modal-panel-large">
+          <button class="modal-close" @click="closeSignup" aria-label="Close">❌</button>
+          <div class="signup-modal-inner">
+            <!-- Render Signup main card inside modal; Signup supports inModal prop -->
+            <Signup :inModal="true" @close="closeSignup" />
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import Signup from './views/auth/Signup.vue'
 
 const year = new Date().getFullYear()
 const signupOpen = ref(false)
@@ -1064,7 +1058,7 @@ function clearContact() {
 .modal-panel { 
   background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
   width: 100%; 
-  max-width: 450px; /* Reduced width for better proportions */
+  max-width: 720px; /* allow wider modal for embedded signup */
   border-radius: 25px; 
   padding: 0; /* Remove default padding */
   position: relative;
@@ -1072,7 +1066,18 @@ function clearContact() {
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(20px);
   margin: 1rem;
-  overflow: hidden; /* Ensure content doesn't overflow */
+  overflow: visible; /* allow internal scrolling for modal content */
+  max-height: 90vh;
+}
+
+/* Inner wrapper for modal content: allow internal scrolling without expanding modal */
+.signup-modal-inner {
+  width: 100%;
+  max-height: calc(90vh - 40px);
+  overflow: auto;
+  background: transparent;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .modal-close { 
