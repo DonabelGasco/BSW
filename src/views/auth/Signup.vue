@@ -240,11 +240,18 @@
 </template>
 
 <script>
-import { db } from '../../firebase';
-import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../../firebase';
+import { collection, getDocs, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 
 export default {
   name: 'SignupForm',
+  props: {
+    inModal: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
       avatars: [],
@@ -373,7 +380,12 @@ export default {
       this.pendingRegistration = true;
 
       try {
-        await addDoc(collection(db, 'users'), {
+        // Create Auth user (email + password)
+        const userCredential = await createUserWithEmailAndPassword(auth, this.email, this.password);
+        const uid = userCredential.user.uid;
+
+        // Write user profile to Firestore using same uid
+        await setDoc(doc(db, 'users', uid), {
           email: this.email,
           birthday: this.birthday,
           avatar: {
@@ -383,15 +395,40 @@ export default {
           role: 'user',
           createdAt: serverTimestamp()
         });
-        
-        alert("🎉 Account created successfully! Welcome aboard!");
+
+        // Send verification email (non-blocking)
+        try {
+          await sendEmailVerification(userCredential.user);
+          // Let the user know a verification email was sent
+          alert('✅ Account created. A verification email has been sent — please check your inbox.');
+        } catch (verErr) {
+          console.warn('Failed to send verification email:', verErr);
+        }
+
+        // Clear form/UI state
         this.clearFormData();
-        
-        // Redirect to user index page
-        this.$router.push('/');
+
+        // If the signup UI is inside a modal, close it; otherwise redirect.
+        if (this.inModal) {
+          this.$emit('close');
+        } else {
+          // Firebase automatically signs in the new user; redirect to dashboard or home
+          this.$router.push('/');
+        }
       } catch (error) {
         console.error("Registration error:", error);
-        alert("Oops! Something went wrong. Please try again!");
+
+        // Handle common auth errors
+        if (error && error.code === 'auth/email-already-in-use') {
+          this.accountExistsError = true;
+          this.accountExistsMessage = 'An account already exists with that email. You can sign in instead.';
+        } else if (error && error.code === 'auth/invalid-email') {
+          alert('Invalid email address. Please check and try again.');
+        } else if (error && error.code === 'auth/weak-password') {
+          alert('Weak password. Please choose a stronger password (at least 8 characters).');
+        } else {
+          alert("Oops! Something went wrong. Please try again!");
+        }
       } finally {
         this.pendingRegistration = false;
       }

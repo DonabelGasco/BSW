@@ -125,11 +125,10 @@
 </template>
 
 <script>
-import { db } from '../../firebase';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { db, auth } from '../../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
-const auth = getAuth();
 
 export default {
   name: 'LoginForm',

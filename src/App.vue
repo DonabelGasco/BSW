@@ -18,8 +18,9 @@
           <a href="#features" class="nav-link">✨ Features</a>
           <a href="#how" class="nav-link">🔧 How it works</a>
           <a href="#contact" class="nav-link">📞 Contact</a>
-          <router-link to="/login" class="nav-link">🔐 Log in</router-link>
-          <button class="btn btn-primary" @click="openSignup">
+          <router-link v-if="!currentUser" to="/login" class="nav-link">🔐 Log in</router-link>
+          <a v-if="currentUser" href="#" class="nav-link" @click.prevent="confirmSignout">🚪 Sign out</a>
+          <button v-if="!currentUser" class="btn btn-primary" @click="openSignup">
             🚀 Get Started
           </button>
         </nav>
@@ -29,6 +30,11 @@
     <main class="main-content">
       <!-- Router view for other pages -->
       <router-view />
+
+      <!-- Welcome banner when signed in -->
+      <div v-if="currentUser" class="welcome-banner">
+        Welcome back, {{ displayName }}!
+      </div>
 
       <!-- Landing page content - only show on root route -->
       <div v-if="$route.path === '/'" class="landing-content">
@@ -65,7 +71,7 @@
               </ul>
 
               <div class="hero-actions">
-                <button class="btn btn-primary btn-large" @click="openSignup">
+                <button v-if="!currentUser" class="btn btn-primary btn-large" @click="openSignup">
                   🚀 Start free
                 </button>
                 <a class="btn btn-ghost btn-large" href="#how">
@@ -184,6 +190,30 @@
         </div>
       </div>
     </transition>
+
+      <!-- Sign out confirmation Modal -->
+      <transition name="modal-fade">
+        <div v-if="signoutOpen" class="modal" role="dialog" aria-modal="true" aria-label="Confirm sign out">
+          <div class="modal-panel modal-panel-large">
+            <button class="modal-close" @click="cancelSignout" aria-label="Close">❌</button>
+            <div class="signup-modal-inner">
+              <div class="form-card signout-card">
+                <div class="modal-header">
+                  <div class="modal-icon">🚪</div>
+                  <h4>Confirm Sign out</h4>
+                  <p class="modal-subtitle">Are you sure you want to sign out?</p>
+                </div>
+                <div class="modal-form">
+                  <div class="form-actions">
+                    <button class="btn btn-ghost" @click="cancelSignout">Cancel</button>
+                    <button class="btn btn-primary" @click="doSignout">Sign out</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
   </div>
 </template>
 
@@ -191,11 +221,17 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Signup from './views/auth/Signup.vue'
+import { auth, db } from './firebase'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
 
 const year = new Date().getFullYear()
 const signupOpen = ref(false)
+const currentUser = ref(null)
+const userProfile = ref(null)
 const signup = ref({ email: '', name: '' })
 const contact = ref({ name: '', email: '', message: '' })
+const signoutOpen = ref(false)
 
 function openSignup() {
   signupOpen.value = true
@@ -209,6 +245,54 @@ const router = useRouter()
 function goHome() {
   router.push('/')
 }
+
+// Track auth state to update UI (hide login when signed in)
+onAuthStateChanged(auth, async (user) => {
+  currentUser.value = user || null
+  if (user) {
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid))
+      userProfile.value = snap.exists() ? snap.data() : null
+    } catch (err) {
+      console.error('Failed to load profile', err)
+      userProfile.value = null
+    }
+  } else {
+    userProfile.value = null
+  }
+})
+
+async function logout() {
+  try {
+    await signOut(auth)
+    currentUser.value = null
+    userProfile.value = null
+    router.push('/')
+  } catch (err) {
+    console.error('Sign out failed', err)
+    alert('Failed to sign out. Please try again.')
+  }
+}
+
+function confirmSignout() {
+  signoutOpen.value = true
+}
+
+function cancelSignout() {
+  signoutOpen.value = false
+}
+
+async function doSignout() {
+  signoutOpen.value = false
+  await logout()
+}
+
+const displayName = computed(() => {
+  if (userProfile.value && (userProfile.value.name || userProfile.value.displayName)) return userProfile.value.name || userProfile.value.displayName
+  if (currentUser.value && currentUser.value.displayName) return currentUser.value.displayName
+  if (currentUser.value && currentUser.value.email) return currentUser.value.email.split('@')[0]
+  return 'friend'
+})
 function signupSubmitData(payload) {
   // placeholder: integrate with your backend or auth provider
   console.log('signup', payload)
@@ -1450,6 +1534,57 @@ function clearContact() {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
   }
+}
+
+/* Welcome banner styled as a card to match landing page */
+.welcome-banner {
+  max-width: 900px;
+  margin: 1.5rem auto;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a8edea 100%);
+  border-radius: 20px;
+  padding: 1rem 1.5rem;
+  border: 4px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  color: white;
+  font-weight: 800;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.welcome-banner .welcome-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 640px) {
+  .welcome-banner {
+    margin: 1rem auto;
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+  .welcome-banner .welcome-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Signout card: match the modal look but contained */
+.signout-card {
+  background: linear-gradient(135deg, #ffffffcc 0%, #ffffffcc 100%);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.6);
+}
+
+@media (max-width: 640px) {
+  .signout-card { padding: 0.75rem }
 }
 
 /* Ensure all sections have proper spacing */
