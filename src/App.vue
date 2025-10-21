@@ -14,13 +14,22 @@
           <span class="logo-icon">🎓</span>
           OIKOS · BSW
         </h1>
-        <nav class="nav" v-if="$route.path === '/'">
-          <a href="#features" class="nav-link">✨ Features</a>
-          <a href="#how" class="nav-link">🔧 How it works</a>
-          <a href="#contact" class="nav-link">📞 Contact</a>
+        <!-- Show full landing nav on root; show compact nav on /user too (sign out visible there) -->
+        <nav class="nav" v-if="$route.path === '/' || $route.path.startsWith('/user')">
+          <template v-if="$route.path === '/'">
+            <a href="#features" class="nav-link">✨ Features</a>
+            <a href="#how" class="nav-link">🔧 How it works</a>
+            <a href="#contact" class="nav-link">📞 Contact</a>
+          </template>
+
+          <!-- Always show Log in when not authenticated -->
           <router-link v-if="!currentUser" to="/login" class="nav-link">🔐 Log in</router-link>
+
+          <!-- When authenticated, show Sign out in the nav (visible on landing and /user) -->
           <a v-if="currentUser" href="#" class="nav-link" @click.prevent="confirmSignout">🚪 Sign out</a>
-          <button v-if="!currentUser" class="btn btn-primary" @click="openSignup">
+
+          <!-- Get Started only shown to visitors on landing (not when on /user) -->
+          <button v-if="!currentUser && $route.path === '/'" class="btn btn-primary" @click="openSignup">
             🚀 Get Started
           </button>
         </nav>
@@ -240,10 +249,15 @@ function closeSignup() {
   signupOpen.value = false
 }
 
-// Router helper for logo click
+// Router helper for logo click — send signed-in users to /user
 const router = useRouter()
 function goHome() {
-  router.push('/')
+  // If a user is signed in, send them to the user dashboard; otherwise go to the landing page
+  if (currentUser.value) {
+    router.push('/user')
+  } else {
+    router.push('/')
+  }
 }
 
 // Track auth state to update UI (hide login when signed in)

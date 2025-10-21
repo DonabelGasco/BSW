@@ -186,12 +186,12 @@ export default {
           if (userRole === 'admin') {
             this.$router.push('/admindash');
           } else {
-            this.$router.push('/');
+            this.$router.push('/user');
           }
         } else {
           // User authenticated but no Firestore document
           alert("🎉 Welcome back! Login successful!");
-          this.$router.push('/');
+          this.$router.push('/user');
         }
       } catch (error) {
         console.error("Login error:", error);
