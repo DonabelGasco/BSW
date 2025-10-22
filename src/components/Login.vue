@@ -1,9 +1,25 @@
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-400 via-purple-300 to-pink-200 relative overflow-hidden">
-    <!-- Animated background shapes -->
-    <div class="absolute top-10 left-10 w-20 h-20 bg-yellow-300 rounded-full opacity-20 animate-bounce"></div>
-    <div class="absolute top-32 right-20 w-16 h-16 bg-green-300 rounded-full opacity-20 animate-bounce"></div>
-    <div class="absolute bottom-20 left-1/4 w-24 h-24 bg-pink-300 rounded-full opacity-20 animate-bounce"></div>
+    <!-- Toast Notifications -->
+    <div class="toast-container">
+      <transition-group name="toast" tag="div">
+        <div
+          v-for="toast in toasts"
+          :key="toast.id"
+          :class="['toast', `toast-${toast.type}`]"
+          @click="removeToast(toast.id)"
+        >
+          <div class="toast-icon">
+            <span v-if="toast.type === 'success'">✅</span>
+            <span v-else-if="toast.type === 'error'">❌</span>
+            <span v-else-if="toast.type === 'warning'">⚠️</span>
+            <span v-else-if="toast.type === 'info'">ℹ️</span>
+          </div>
+          <div class="toast-message">{{ toast.message }}</div>
+          <button class="toast-close" @click.stop="removeToast(toast.id)">×</button>
+        </div>
+      </transition-group>
+    </div>
 
     <!-- Login Card -->
     <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md relative z-10">
@@ -89,17 +105,6 @@
           {{ error }}
         </div>
       </transition>
-
-      <!-- Success message -->
-      <transition name="slide-down">
-        <div
-          v-if="success"
-          class="mt-4 p-4 bg-green-100 border-2 border-green-400 rounded-xl text-green-800 font-medium flex items-center gap-2"
-        >
-          <span class="text-2xl">✅</span>
-          {{ success }}
-        </div>
-      </transition>
     </div>
 
     <!-- Loading overlay -->
@@ -121,18 +126,49 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const error = ref('')
-const success = ref('')
 const loading = ref(false)
 const showPassword = ref(false)
 const rememberMe = ref(false)
 
+// Toast notification system
+const toasts = ref([])
+let toastId = 0
+
+const showToast = (message, type = 'success', duration = 3000) => {
+  const id = ++toastId
+  const toast = {
+    id,
+    message,
+    type,
+    duration,
+    visible: true
+  }
+  
+  toasts.value.push(toast)
+  
+  // Auto remove after duration
+  setTimeout(() => {
+    removeToast(id)
+  }, duration)
+  
+  return id
+}
+
+const removeToast = (id) => {
+  const index = toasts.value.findIndex(toast => toast.id === id)
+  if (index > -1) {
+    toasts.value.splice(index, 1)
+  }
+}
+
 const login = async () => {
   error.value = ''
-  success.value = ''
   loading.value = true
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value)
-    success.value = 'Login successful! Redirecting...'
+    
+    // Show toast notification instead of success message
+    showToast('🎉 Login successful! Redirecting...', 'success', 2000)
     
     // Store remember me preference
     if (rememberMe.value) {
@@ -159,12 +195,13 @@ const login = async () => {
 
 const loginWithGoogle = async () => {
   error.value = ''
-  success.value = ''
   loading.value = true
   try {
     const provider = new GoogleAuthProvider()
     await signInWithPopup(auth, provider)
-    success.value = 'Google login successful! Redirecting...'
+    
+    // Show toast notification for Google login
+    showToast('🎉 Google login successful! Redirecting...', 'success', 2000)
     
     if (rememberMe.value) {
       localStorage.setItem('rememberMe', 'true')
@@ -188,41 +225,133 @@ const loginWithGoogle = async () => {
 </script>
 
 <style scoped>
-.animate-bounce {
-  animation: bounce 1s infinite;
+/* Toast Notification Styles */
+.toast-container {
+  position: fixed;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.slide-down-enter-active,
-.slide-down-leave-active {
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  pointer-events: all;
+  min-width: 300px;
+  max-width: 400px;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.slide-down-enter-from {
+.toast:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.toast-warning {
+  background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.toast-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.toast-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  animation: bounce 2s infinite;
+}
+
+.toast-message {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: white;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Toast animations */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.4s ease;
+}
+
+.toast-enter-from {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-100%) scale(0.8);
 }
 
-.slide-down-leave-to {
+.toast-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-100%) scale(0.8);
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
+.toast-move {
+  transition: transform 0.4s ease;
 }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+/* Responsive toast */
+@media (max-width: 640px) {
+  .toast-container {
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+  }
+  
+  .toast {
+    min-width: auto;
+    width: 100%;
+  }
 }
 </style>

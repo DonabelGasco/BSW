@@ -3,10 +3,10 @@
     <!-- Header with playful design -->
     <header class="site-header">
       <div class="container header-inner">
-        <h1 class="logo">
+        <router-link to="/login" class="logo-button">
           <span class="logo-icon">🎓</span>
           OIKOS · BSW
-        </h1>
+        </router-link>
         <nav class="nav" v-if="$route.path === '/'">
           <a href="#features" class="nav-link">✨ Features</a>
           <a href="#how" class="nav-link">🔧 How it works</a>
@@ -143,13 +143,59 @@
           <div class="contact-card">
             <h3 class="section-title">📞 Get in touch</h3>
             <p class="contact-subtitle">Questions, feedback, or to request a classroom pilot! 🏫</p>
+            
+            <!-- Success Message -->
+            <div v-if="contactSuccess" class="contact-message contact-success">
+              ✅ Message sent successfully! We'll get back to you soon.
+            </div>
+            
+            <!-- Error Message -->
+            <div v-if="contactError" class="contact-message contact-error">
+              ❌ {{ contactError }}
+            </div>
+            
             <form class="contact-form" @submit.prevent="submitContact">
-              <input v-model="contact.name" type="text" placeholder="👤 Your name" required class="form-input" />
-              <input v-model="contact.email" type="email" placeholder="📧 Email" required class="form-input" />
-              <textarea v-model="contact.message" placeholder="💬 Message" rows="3" class="form-textarea"></textarea>
+              <input 
+                v-model="contact.name" 
+                type="text" 
+                placeholder="👤 Your name" 
+                required 
+                class="form-input"
+                :disabled="contactLoading"
+              />
+              <input 
+                v-model="contact.email" 
+                type="email" 
+                placeholder="📧 Email" 
+                required 
+                class="form-input"
+                :disabled="contactLoading"
+              />
+              <textarea 
+                v-model="contact.message" 
+                placeholder="💬 Message" 
+                rows="4" 
+                required
+                class="form-textarea"
+                :disabled="contactLoading"
+              ></textarea>
               <div class="form-actions">
-                <button class="btn btn-primary" type="submit">📤 Send</button>
-                <button class="btn btn-ghost" type="button" @click="clearContact">🗑️ Clear</button>
+                <button 
+                  class="btn btn-primary" 
+                  type="submit"
+                  :disabled="contactLoading"
+                  :class="{ 'btn-loading': contactLoading }"
+                >
+                  {{ contactLoading ? '' : '📤 Send' }}
+                </button>
+                <button 
+                  class="btn btn-ghost" 
+                  type="button" 
+                  @click="clearContact"
+                  :disabled="contactLoading"
+                >
+                  🗑️ Clear
+                </button>
               </div>
             </form>
           </div>
@@ -193,6 +239,9 @@ const year = new Date().getFullYear()
 const signupOpen = ref(false)
 const signup = ref({ email: '', name: '' })
 const contact = ref({ name: '', email: '', message: '' })
+const contactLoading = ref(false)
+const contactSuccess = ref(false)
+const contactError = ref('')
 
 function openSignup() {
   signupOpen.value = true
@@ -211,14 +260,49 @@ function submitSignup() {
   alert('Thanks — check your email to continue.')
 }
 
-function submitContact() {
-  // placeholder: send contact data
-  console.log('contact', contact.value)
-  clearContact()
-  alert('Thanks — we will reply soon.')
+async function submitContact() {
+  // Validate form
+  if (!contact.value.name.trim()) {
+    contactError.value = 'Please enter your name'
+    return
+  }
+  if (!contact.value.email.trim()) {
+    contactError.value = 'Please enter your email'
+    return
+  }
+  if (!contact.value.message.trim()) {
+    contactError.value = 'Please enter a message'
+    return
+  }
+
+  contactLoading.value = true
+  contactError.value = ''
+  
+  try {
+    // Simulate API call - replace with actual implementation
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // Log contact data (replace with actual API call)
+    console.log('Contact form submitted:', contact.value)
+    
+    contactSuccess.value = true
+    clearContact()
+    
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      contactSuccess.value = false
+    }, 3000)
+    
+  } catch (error) {
+    contactError.value = 'Failed to send message. Please try again.'
+  } finally {
+    contactLoading.value = false
+  }
 }
+
 function clearContact() {
   contact.value = { name: '', email: '', message: '' }
+  contactError.value = ''
 }
 </script>
 
@@ -241,7 +325,7 @@ function clearContact() {
   background: linear-gradient(135deg, #74b9ff 0%, #0984e3 25%, #6c5ce7 50%, #a29bfe 75%, #fd79a8 100%);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
-  color: #1a202c; 
+  color: #1a202c; /* Dark gray for better readability */
   min-height: 100vh; 
   font-family: 'Comic Sans MS', cursive, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   position: relative;
@@ -285,9 +369,38 @@ function clearContact() {
   gap: 0.5rem;
 }
 
-.logo-icon {
-  font-size: 2rem;
-  animation: bounce 2s infinite;
+/* New logo button styles */
+.logo-button {
+  font-weight: 900; 
+  font-size: 1.8rem;
+  letter-spacing: 1px; 
+  margin: 0; 
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.logo-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+  border-color: rgba(255, 255, 255, 0.6);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.logo-button:active {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .nav { 
@@ -478,29 +591,30 @@ function clearContact() {
 
 .hero-title { 
   margin: 0 0 1rem 0; 
-  font-size: 2.8rem; /* Slightly smaller */
+  font-size: 2.8rem;
   font-weight: 900;
-  color: white;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); /* Lighter shadow */
+  color: #1a202c; /* Dark gray for better contrast */
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8); /* White shadow for better visibility */
   line-height: 1.2;
-  background: rgba(0, 0, 0, 0.25); /* Lighter background */
+  background: rgba(255, 255, 255, 0.9); /* More opaque white background */
   padding: 1rem;
   border-radius: 15px;
   backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
 }
 
 .lead { 
-  /* White text with strong shadow and background */
-  color: white; 
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Lighter shadow */
+  color: #2d3748; /* Darker gray for better contrast */ 
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8); /* White shadow for visibility */
   margin-bottom: 2rem;
-  font-size: 1.1rem; /* Slightly smaller */
-  font-weight: 600; /* Reduced from 700 */
+  font-size: 1.1rem;
+  font-weight: 600;
   line-height: 1.6;
-  background: rgba(0, 0, 0, 0.25); /* Lighter background */
+  background: rgba(255, 255, 255, 0.9); /* More opaque white background */
   padding: 1rem;
   border-radius: 15px;
   backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
 }
 
 .quick-features { 
@@ -512,16 +626,16 @@ function clearContact() {
 }
 
 .quick-features li {
-  color: white;
-  font-size: 1rem; /* Slightly smaller */
-  font-weight: 600; /* Reduced from 700 */
-  padding: 0.8rem; /* Reduced padding */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-  border-radius: 12px; /* Smaller radius */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* Lighter shadow */
-  border: 2px solid rgba(255, 255, 255, 0.4); /* Lighter border */
+  color: #2d3748; /* Dark gray for better contrast */
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.8); /* Stronger white border */
   backdrop-filter: blur(10px);
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3); /* Lighter shadow */
+  text-shadow: none; /* Remove text shadow for better clarity */
 }
 
 .hero-actions { 
@@ -550,8 +664,8 @@ function clearContact() {
   align-items: center;
   margin-bottom: 1rem;
   font-weight: 800;
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  color: #2d3748; /* Dark gray for better contrast */
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8); /* White shadow for visibility */
 }
 
 .card-body { 
@@ -621,16 +735,15 @@ function clearContact() {
   font-size: 2.5rem;
   font-weight: 900;
   text-align: center;
-  background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #1a202c; /* Dark gray for better readability */
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9); /* Strong white shadow */
   padding: 0.8rem 1.5rem;
   border-radius: 20px;
   backdrop-filter: blur(10px);
   display: block;
   width: fit-content;
-  border: 3px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
+  border: 3px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
@@ -662,31 +775,43 @@ function clearContact() {
   text-align: center;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
-  min-height: 260px; /* Reduced from 280px */
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); /* Adjusted shadow */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 320px;
   margin: 0 auto;
+  color: #1a202c; /* Dark gray for better contrast */
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
 }
 
-/* Fix step items alignment */
+.feature h4 {
+  color: #1a202c; /* Dark gray for better contrast */
+  font-weight: 800;
+  margin: 1rem 0;
+}
+
+.feature p {
+  color: #2d3748; /* Slightly lighter gray for body text */
+  font-weight: 600;
+}
+
 .step-item {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  margin: 1.5rem 0; /* Reduced from 2rem */
-  padding: 1.8rem; /* Reduced from 2.5rem */
-  border-radius: 20px; /* Reduced from 25px */
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2); /* Lighter shadow */
-  font-size: 1.1rem; /* Reduced from 1.3rem */
-  font-weight: 600; /* Reduced from 700 */
-  color: white;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3); /* Lighter shadow for clarity */
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
+  margin: 1.5rem 0;
+  padding: 1.8rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a202c; /* Dark gray for better contrast */
+  text-shadow: none; /* Remove text shadow for better clarity */
   display: flex;
   align-items: center;
-  gap: 1.5rem; /* Reduced from 2rem */
-  border: 3px solid rgba(255, 255, 255, 0.6); /* Thinner border */
+  gap: 1.5rem;
+  border: 3px solid rgba(102, 126, 234, 0.3); /* Light indigo border */
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   counter-increment: step-counter;
@@ -725,37 +850,43 @@ function clearContact() {
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2)); /* Lighter shadow */
 }
 
-/* Fix contact section sizing */
+/* Fix contact section sizing and centering */
 .contact { 
-  padding: 3rem 0; /* Reduced from 4rem */
+  padding: 3rem 0;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-radius: 25px; /* Reduced from 30px */
-  margin: 1.5rem auto; /* Reduced from 2rem */
-  max-width: calc(100% - 3rem); /* Reduced width */
+  border-radius: 25px;
+  margin: 1.5rem auto;
+  max-width: calc(100% - 3rem);
   width: calc(100vw - 3rem);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08); /* Lighter shadow */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .contact .container {
-  max-width: 700px; /* Reduced from 1200px */
+  max-width: 700px;
   margin: 0 auto;
-  padding: 0 1.5rem; /* Reduced padding */
+  padding: 0 1.5rem;
   display: flex;
   justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .contact-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-  border-radius: 25px; /* Reduced from 30px */
-  padding: 2.5rem; /* Reduced from 3rem */
-  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3); /* Lighter shadow */
+  border-radius: 25px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
   width: 100%;
-  max-width: 500px; /* Reduced from 600px */
-  border: 4px solid rgba(255, 255, 255, 0.7); /* Thinner border */
+  max-width: 500px;
+  border: 4px solid rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(15px);
   position: relative;
   overflow: hidden;
+  margin: 0 auto; /* Center the card */
 }
 
 /* Fix contact card shimmer effect */
@@ -772,280 +903,79 @@ function clearContact() {
 
 /* Fix contact title sizing and clarity */
 .contact-card .section-title {
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); /* Lighter shadow for clarity */
-  background: none;
-  border: none;
-  box-shadow: none;
-  backdrop-filter: none;
-  font-size: 2rem; /* Reduced from 2.5rem */
+  color: #1a202c; /* Dark gray for better contrast */
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9); /* Strong white shadow */
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  font-size: 2rem;
   margin: 0 auto 1rem auto;
-  padding: 0;
+  padding: 0.8rem 1.5rem;
   width: fit-content;
   position: relative;
   z-index: 2;
   text-align: center;
-  line-height: 1.2; /* Improve line spacing */
+  line-height: 1.2;
+  border-radius: 15px;
 }
 
 .contact-subtitle {
-  color: rgba(255, 255, 255, 0.95);
+  color: #1a202c; /* Dark gray for better contrast */
   text-align: center;
-  font-weight: 600; /* Reduced from 700 */
-  margin-bottom: 1.5rem; /* Reduced from 2rem */
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3); /* Lighter shadow */
-  font-size: 1rem; /* Reduced from 1.2rem */
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8); /* White shadow for visibility */
+  font-size: 1rem;
   position: relative;
   z-index: 2;
-  line-height: 1.4; /* Improve line spacing */
-}
-
-.contact-form { 
-  display: grid; 
-  gap: 1.2rem; /* Reduced from 1.5rem */
-  position: relative;
-  z-index: 2;
-}
-
-.form-input, .form-textarea {
-  border: 2px solid rgba(255, 255, 255, 0.7); /* Thinner border */
-  padding: 1rem; /* Reduced from 1.2rem */
-  border-radius: 12px; /* Reduced from 15px */
-  background: rgba(255, 255, 255, 0.95);
-  font-size: 1rem; /* Reduced from 1.1rem */
-  font-weight: 500; /* Reduced from 600 */
-  transition: all 0.3s ease;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.9); /* White background for readability */
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Lighter shadow */
+  border: 2px solid rgba(255, 255, 255, 0.6);
 }
 
-.form-input:focus, .form-textarea:focus {
-  outline: none;
-  border-color: #ffd700;
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2); /* Lighter glow */
-  background: white;
-  transform: scale(1.01); /* Reduced scale */
-}
-
-.form-actions { 
-  display: flex; 
-  gap: 1rem; 
-  margin-top: 0.5rem; /* Reduced margin */
-}
-
-.form-actions .btn {
-  flex: 1;
-  padding: 0.9rem 1.5rem; /* Reduced padding */
-  font-size: 1rem; /* Reduced from 1.2rem */
-  font-weight: 700; /* Reduced from 800 */
-  border-radius: 12px; /* Reduced from 15px */
-  transition: all 0.3s ease;
-}
-
-.form-actions .btn:hover {
-  transform: translateY(-2px) scale(1.02); /* Reduced effects */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Lighter shadow */
-}
-
-/* Fix how section sizing */
-.how { 
-  padding: 3rem 0; /* Reduced from 4rem */
-  background: rgba(255, 255, 255, 0.1);
+/* Footer text visibility */
+.site-footer {
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  border-radius: 25px; /* Reduced from 30px */
-  margin: 1.5rem auto; /* Reduced from 2rem */
-  max-width: calc(100% - 3rem); /* Reduced width */
-  width: calc(100vw - 3rem);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08); /* Lighter shadow */
+  border-top: 2px solid rgba(255, 255, 255, 0.5);
+  padding: 1rem 0;
 }
 
-.how .container {
-  max-width: 900px; /* Reduced from 1200px */
-  margin: 0 auto;
-  padding: 0 1.5rem; /* Reduced padding */
+.site-footer small {
+  color: #2d3748; /* Dark gray for better contrast */
+  font-weight: 600;
+  text-shadow: none;
 }
 
-.how-steps { 
-  list-style: none;
-  padding: 0; 
-  max-width: 800px; /* Reduced from 900px */
-  margin: 0 auto;
-  counter-reset: step-counter;
-}
-
-/* Fix step items sizing and text clarity */
-.step-item {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  margin: 1.5rem 0; /* Reduced from 2rem */
-  padding: 1.8rem; /* Reduced from 2.5rem */
-  border-radius: 20px; /* Reduced from 25px */
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2); /* Lighter shadow */
-  font-size: 1.1rem; /* Reduced from 1.3rem */
-  font-weight: 600; /* Reduced from 700 */
-  color: white;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3); /* Lighter shadow for clarity */
-  display: flex;
-  align-items: center;
-  gap: 1.5rem; /* Reduced from 2rem */
-  border: 3px solid rgba(255, 255, 255, 0.6); /* Thinner border */
-  transition: all 0.3s ease;
+/* Modal text improvements */
+.modal-header h4 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1a202c; /* Dark text for better contrast */
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9); /* White shadow */
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
   backdrop-filter: blur(10px);
-  counter-increment: step-counter;
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.step-item::before {
-  content: counter(step-counter);
-  position: absolute;
-  left: -12px; /* Reduced from -15px */
-  top: -12px; /* Reduced from -15px */
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  width: 40px; /* Reduced from 50px */
-  height: 40px; /* Reduced from 50px */
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800; /* Reduced from 900 */
-  font-size: 1.2rem; /* Reduced from 1.5rem */
-  border: 3px solid white; /* Thinner border */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Lighter shadow */
-}
-
-.step-item:hover {
-  transform: translateX(10px) scale(1.01); /* Reduced effects */
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* Lighter shadow */
-}
-
-.step-icon {
-  font-size: 2.5rem; /* Reduced from 3rem */
-  animation: bounce 2s infinite;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2)); /* Lighter shadow */
-}
-
-/* Fix contact section sizing */
-.contact { 
-  padding: 3rem 0; /* Reduced from 4rem */
-  background: rgba(255, 255, 255, 0.1);
+.modal-subtitle {
+  color: #2d3748; /* Dark gray for better contrast */
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
   backdrop-filter: blur(10px);
-  border-radius: 25px; /* Reduced from 30px */
-  margin: 1.5rem auto; /* Reduced from 2rem */
-  max-width: calc(100% - 3rem); /* Reduced width */
-  width: calc(100vw - 3rem);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08); /* Lighter shadow */
-}
-
-.contact .container {
-  max-width: 700px; /* Reduced from 1200px */
-  margin: 0 auto;
-  padding: 0 1.5rem; /* Reduced padding */
-  display: flex;
-  justify-content: center;
-}
-
-.contact-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-  border-radius: 25px; /* Reduced from 30px */
-  padding: 2.5rem; /* Reduced from 3rem */
-  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3); /* Lighter shadow */
-  width: 100%;
-  max-width: 500px; /* Reduced from 600px */
-  border: 4px solid rgba(255, 255, 255, 0.7); /* Thinner border */
-  backdrop-filter: blur(15px);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Fix contact card shimmer effect */
-.contact-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%); /* Lighter effect */
-  animation: shimmer 4s ease-in-out infinite; /* Slower animation */
-}
-
-/* Fix contact title sizing and clarity */
-.contact-card .section-title {
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); /* Lighter shadow for clarity */
-  background: none;
-  border: none;
-  box-shadow: none;
-  backdrop-filter: none;
-  font-size: 2rem; /* Reduced from 2.5rem */
-  margin: 0 auto 1rem auto;
-  padding: 0;
-  width: fit-content;
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  line-height: 1.2; /* Improve line spacing */
-}
-
-.contact-subtitle {
-  color: rgba(255, 255, 255, 0.95);
-  text-align: center;
-  font-weight: 600; /* Reduced from 700 */
-  margin-bottom: 1.5rem; /* Reduced from 2rem */
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3); /* Lighter shadow */
-  font-size: 1rem; /* Reduced from 1.2rem */
-  position: relative;
-  z-index: 2;
-  line-height: 1.4; /* Improve line spacing */
-}
-
-.contact-form { 
-  display: grid; 
-  gap: 1.2rem; /* Reduced from 1.5rem */
-  position: relative;
-  z-index: 2;
-}
-
-.form-input, .form-textarea {
-  border: 2px solid rgba(255, 255, 255, 0.7); /* Thinner border */
-  padding: 1rem; /* Reduced from 1.2rem */
-  border-radius: 12px; /* Reduced from 15px */
-  background: rgba(255, 255, 255, 0.95);
-  font-size: 1rem; /* Reduced from 1.1rem */
-  font-weight: 500; /* Reduced from 600 */
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Lighter shadow */
-}
-
-.form-input:focus, .form-textarea:focus {
-  outline: none;
-  border-color: #ffd700;
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2); /* Lighter glow */
-  background: white;
-  transform: scale(1.01); /* Reduced scale */
-}
-
-.form-actions { 
-  display: flex; 
-  gap: 1rem; 
-  margin-top: 0.5rem; /* Reduced margin */
-}
-
-.form-actions .btn {
-  flex: 1;
-  padding: 0.9rem 1.5rem; /* Reduced padding */
-  font-size: 1rem; /* Reduced from 1.2rem */
-  font-weight: 700; /* Reduced from 800 */
-  border-radius: 12px; /* Reduced from 15px */
-  transition: all 0.3s ease;
-}
-
-.form-actions .btn:hover {
-  transform: translateY(-2px) scale(1.02); /* Reduced effects */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Lighter shadow */
 }
 
 /* Center modal properly */
@@ -1115,19 +1045,27 @@ function clearContact() {
 .modal-header h4 {
   font-size: 1.8rem;
   font-weight: 800;
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  color: #1a202c; /* Dark text for better contrast */
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9); /* White shadow */
   margin: 0 0 0.5rem 0;
   line-height: 1.2;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 
 .modal-subtitle {
-  color: rgba(255, 255, 255, 0.95);
+  color: #2d3748; /* Dark gray for better contrast */
   font-weight: 600;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
   font-size: 1rem;
   margin: 0;
   line-height: 1.4;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
 }
 
 .modal-form {
@@ -1138,300 +1076,260 @@ function clearContact() {
 
 /* Modal form inputs - consistent with contact form */
 .modal-form .form-input {
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  padding: 1rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.95);
-  font-size: 1rem;
-  font-weight: 500;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  padding: 1.2rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.98);
+  font-size: 1.1rem;
+  font-weight: 600;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   width: 100%;
   box-sizing: border-box;
+  color: #1a202c;
+}
+
+.modal-form .form-input::placeholder {
+  color: #4a5568;
+  font-weight: 500;
+  opacity: 0.8;
 }
 
 .modal-form .form-input:focus {
   outline: none;
-  border-color: #ffd700;
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+  border-color: #4facfe;
+  box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.3);
   background: white;
-  transform: scale(1.01);
+  transform: scale(1.02);
+}
+
+/* Enhanced contact form styling with better visibility */
+.contact-form { 
+  display: grid; 
+  gap: 1.2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.form-input, .form-textarea {
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  padding: 1.2rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.98);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  color: #1a202c;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #4a5568;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.form-input:focus, .form-textarea:focus {
+  outline: none;
+  border-color: #4facfe;
+  box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.3);
+  background: white;
+  transform: scale(1.02);
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.form-actions { 
+  display: flex; 
+  gap: 1rem; 
+  margin-top: 1rem;
+}
+
+.form-actions .btn {
+  flex: 1;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-actions .btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.form-actions .btn:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced modal form inputs */
+.modal-form .form-input {
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  padding: 1.2rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.98);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  color: #1a202c;
 }
 
 .modal-form .form-input::placeholder {
-  color: #666;
+  color: #4a5568;
   font-weight: 500;
+  opacity: 0.8;
 }
 
-/* Modal form actions - better spacing */
-.modal-form .form-actions {
+.modal-form .form-input:focus {
+  outline: none;
+  border-color: #4facfe;
+  box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.3);
+  background: white;
+  transform: scale(1.02);
+}
+
+/* Reduced size of "How it works" step cards */
+.how { 
+  padding: 2rem 0; /* Reduced from 3rem */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px; /* Reduced from 25px */
+  margin: 1rem auto; /* Reduced from 1.5rem */
+  max-width: calc(100% - 2rem); /* Reduced width */
+  width: calc(100vw - 2rem);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06); /* Lighter shadow */
+}
+
+.how .container {
+  max-width: 700px; /* Reduced from 900px */
+  margin: 0 auto;
+  padding: 0 1rem; /* Reduced padding */
+}
+
+.how-steps { 
+  list-style: none;
+  padding: 0; 
+  max-width: 600px; /* Reduced from 800px */
+  margin: 0 auto;
+  counter-reset: step-counter;
+}
+
+.step-item {
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
+  margin: 1rem 0; /* Reduced from 1.5rem */
+  padding: 1.2rem 1.5rem; /* Reduced padding significantly */
+  border-radius: 15px; /* Reduced from 20px */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+  font-size: 0.95rem; /* Reduced from 1.1rem */
+  font-weight: 600;
+  color: #1a202c;
+  text-shadow: none;
   display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
+  align-items: center;
+  gap: 1rem; /* Reduced from 1.5rem */
+  border: 2px solid rgba(102, 126, 234, 0.2); /* Thinner border */
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  counter-increment: step-counter;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.modal-form .form-actions .btn {
-  flex: 1;
-  padding: 0.9rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 700;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  text-align: center;
+.step-item::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: -8px; /* Reduced from -12px */
+  top: -8px; /* Reduced from -12px */
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  width: 30px; /* Reduced from 40px */
+  height: 30px; /* Reduced from 40px */
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  font-weight: 700; /* Reduced from 800 */
+  font-size: 0.9rem; /* Reduced from 1.2rem */
+  border: 2px solid white; /* Thinner border */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1); /* Lighter shadow */
 }
 
-.modal-form .form-actions .btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+.step-item:hover {
+  transform: translateX(5px) scale(1.005); /* Reduced effects */
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12); /* Lighter shadow */
 }
 
-/* Ensure modal buttons have proper colors */
-.modal-form .form-actions .btn-primary {
-  background: var(--secondary-gradient);
-  color: white;
-  border: none;
+.step-icon {
+  font-size: 1.8rem; /* Reduced from 2.5rem */
+  animation: bounce 2s infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)); /* Lighter shadow */
 }
 
-.modal-form .form-actions .btn-ghost {
-  background: rgba(255, 255, 255, 0.95);
-  color: #4338ca;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-}
-
-.modal-form .form-actions .btn-ghost:hover {
-  background: rgba(255, 255, 255, 1);
-  border-color: rgba(67, 56, 202, 0.3);
-}
-
-/* Responsive modal adjustments */
-@media (max-width: 600px) {
-  .modal-panel {
-    max-width: 95%;
-    margin: 0.5rem;
-  }
-  
-  .modal-header {
-    padding: 1.5rem 1.5rem 1rem 1.5rem;
-  }
-  
-  .modal-header h4 {
-    font-size: 1.6rem;
-  }
-  
-  .modal-form {
-    padding: 0 1.5rem 1.5rem 1.5rem;
-  }
-  
-  .modal-form .form-actions {
-    flex-direction: column;
-    gap: 0.8rem;
-  }
-  
-  .modal-form .form-actions .btn {
-    width: 100%;
-  }
-  
-  .modal-close {
-    width: 35px;
-    height: 35px;
-    font-size: 1rem;
-  }
-}
-
-/* Enhanced section spacing */
-.features { 
-  padding: 4rem 0;
-  margin: 2rem 0;
-}
-
-.hero { 
-  padding: 4rem 0;
-}
-
-/* Additional animations */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.feature-icon:hover {
-  animation: pulse 1s infinite;
-}
-
-/* Responsive improvements */
-@media (max-width: 1200px) {
-  .container {
-    padding: 0 1.5rem;
-  }
-  
-  .header-inner {
-    padding: 1rem 1.5rem;
-  }
-  
-  .hero-grid {
-    padding: 0 1.5rem;
-  }
-  
-  .how,
-  .contact {
-    width: calc(100vw - 3rem);
-    margin: 1.5rem auto;
-  }
-}
-
+/* Responsive adjustments for step items */
 @media (max-width: 900px) {
-  .container {
-    padding: 0 1rem;
-  }
-  
-  .header-inner {
-    padding: 1rem;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .nav {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  
-  .hero-grid { 
-    grid-template-columns: 1fr; 
-    text-align: center;
-    gap: 2rem;
-    padding: 0 1rem;
-  }
-  
-  .hero-preview { 
-    order: -1; 
-  }
-  
-  .features-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 0;
-  }
-  
-  .feature {
-    max-width: 100%;
-    min-height: 250px;
-    padding: 1.5rem;
-  }
-  
-  .how,
-  .contact {
-    width: calc(100vw - 2rem);
-    margin: 1rem auto;
-    padding: 3rem 0;
-  }
-  
-  .how .container,
-  .contact .container {
-    padding: 0 1rem;
+  .how {
+    width: calc(100vw - 1.5rem);
+    margin: 0.8rem auto;
+    padding: 2rem 0;
   }
   
   .step-item {
-    padding: 2rem;
-    font-size: 1.1rem;
-    gap: 1.5rem;
-    margin: 1.5rem 0;
+    padding: 1rem 1.2rem; /* Reduced padding for mobile */
+    font-size: 0.9rem;
+    gap: 0.8rem;
+    margin: 0.8rem 0;
   }
   
-  .contact-card {
-    padding: 2rem;
-  }
-  
-  .section-title {
-    font-size: 2rem;
-    padding: 0.6rem 1rem;
+  .step-icon {
+    font-size: 1.5rem; /* Smaller icon on mobile */
   }
 }
 
 @media (max-width: 600px) {
-  .container {
-    padding: 0 0.5rem;
-  }
-  
-  .header-inner {
-    padding: 0.5rem;
-  }
-  
-  .hero {
-    padding: 2rem 0;
-  }
-  
-  .hero-grid {
-    padding: 0 0.5rem;
-  }
-  
-  .features,
-  .how,
-  .contact {
-    padding: 2rem 0;
-  }
-  
-  .how,
-  .contact {
+  .how {
     margin: 0.5rem auto;
-    border-radius: 20px;
+    border-radius: 15px;
     width: calc(100vw - 1rem);
-  }
-  
-  .how .container,
-  .contact .container {
-    padding: 0 0.5rem;
-  }
-  
-  .contact-card {
-    padding: 1.5rem;
-    border-radius: 20px;
+    padding: 1.5rem 0; /* Reduced padding */
   }
   
   .step-item {
-    padding: 1.5rem;
-    font-size: 1rem;
-    gap: 1rem;
+    padding: 0.8rem 1rem; /* Further reduced padding */
+    font-size: 0.85rem;
+    gap: 0.6rem;
     flex-direction: column;
     text-align: center;
   }
   
   .step-item::before {
     position: static;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    width: 25px; /* Smaller counter */
+    height: 25px;
+    font-size: 0.8rem;
   }
   
-  .nav {
-    gap: 0.25rem;
+  .step-icon {
+    font-size: 1.3rem; /* Even smaller on mobile */
   }
-  
-  .nav-link {
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-  }
-  
-  .btn {
-    padding: 0.8rem 1.5rem;
-    font-size: 1rem;
-  }
-}
-
-/* Ensure all sections have proper spacing */
-.hero + .features {
-  margin-top: 0;
-}
-
-.features + .how {
-  margin-top: 0;
-}
-
-.how + .contact {
-  margin-top: 0;
 }
 </style>
