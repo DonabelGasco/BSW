@@ -343,7 +343,6 @@ function clearContact() {
   top: 0; 
   z-index: 20;
   box-shadow: 0 8px 32px rgba(255, 105, 180, 0.3);
-  width: 100%;
 }
 
 .header-inner { 
@@ -375,8 +374,8 @@ function clearContact() {
   font-size: 1.8rem;
   letter-spacing: 1px; 
   margin: 0; 
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  color: #1a202c; /* Dark text for better contrast */
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9); /* Strong white shadow */
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -410,15 +409,15 @@ function clearContact() {
 }
 
 .nav-link { 
-  /* White color with shadow for better contrast */
-  color: white; 
+  /* Dark text for better contrast */
+  color: #1a202c; 
   text-decoration: none; 
   font-weight: 700;
   font-size: 1rem; /* Slightly smaller */
   padding: 0.5rem 1rem;
   border-radius: 20px; /* Smaller radius */
   transition: all 0.3s ease;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3); /* Lighter shadow */
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9); /* Strong white shadow */
 }
 
 .nav-link:hover {
@@ -444,13 +443,16 @@ function clearContact() {
 
 .btn-primary { 
   background: var(--secondary-gradient);
-  color: white; 
+  color: #dc2626; /* Red color for text */
   box-shadow: var(--shadow);
+  font-weight: 800;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8); /* White shadow for better visibility */
 }
 
 .btn-primary:hover {
   box-shadow: var(--shadow-hover);
   transform: translateY(-3px) scale(1.05);
+  color: #b91c1c; /* Darker red on hover */
 }
 
 .btn-ghost { 
